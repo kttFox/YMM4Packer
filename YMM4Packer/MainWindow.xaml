@@ -1,0 +1,320 @@
+﻿<window:Window x:Class="YMM4Packer.MainWindow"
+			   xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+			   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+			   xmlns:bhv="clr-namespace:YMM4Packer.Behavior"
+			   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+			   xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+			   xmlns:l="http://schemas.livet-Ex/"
+			   xmlns:lbhv="clr-namespace:Libraries.Behaviors"
+			   xmlns:local="clr-namespace:YMM4Packer"
+			   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+			   xmlns:window="clr-namespace:Libraries.RestorableWindow"
+			   Title="YMM4 Packer"
+			   Width="1100"
+			   Height="650"
+			   d:DataContext="{x:Static local:design.MainWindowViewModel}"
+			   mc:Ignorable="d">
+	<Window.DataContext>
+		<local:MainWindowViewModel />
+	</Window.DataContext>
+
+	<Window.Resources>
+		<ResourceDictionary Source="/Resources/DataGridControlTemplate.xaml" />
+	</Window.Resources>
+
+	<i:Interaction.Triggers>
+		<i:EventTrigger EventName="ContentRendered">
+			<l:CallMethodAction MethodName="Initialize"
+								MethodParameter="{Binding .,
+														  RelativeSource={RelativeSource Mode=FindAncestor,
+																						 AncestorType=Window}}"
+								MethodTarget="{Binding}" />
+		</i:EventTrigger>
+
+		<i:EventTrigger EventName="Closed">
+			<l:DataContextDisposeAction />
+		</i:EventTrigger>
+
+		<l:MessageTrigger Messenger="{Binding Messenger}">
+			<l:MultiMessageAction />
+		</l:MessageTrigger>
+
+		<l:MessageTrigger MessageKey="SaveFileDrop"
+						  Messenger="{Binding Messenger}">
+			<l:CallMethodAction MethodName="SaveFileDrop"
+								MethodTarget="{Binding}" />
+		</l:MessageTrigger>
+	</i:Interaction.Triggers>
+
+	<i:Interaction.Behaviors>
+		<bhv:FileDropBehavior Command="{Binding FileDropCommand}" />
+	</i:Interaction.Behaviors>
+
+	<DockPanel>
+		<Menu DockPanel.Dock="Top">
+
+			<MenuItem Height="20"
+					  Header="ファイル(F)">
+				<MenuItem Command="Open"
+						  Header="開く(O)..." />
+				<MenuItem Command="SaveAs"
+						  Header="パッケージ作成(S)..." />
+				<Separator />
+				<MenuItem Command="Close"
+						  Header="終了(X)" />
+			</MenuItem>
+			<MenuItem Header="ツール(T)"
+					  Visibility="Collapsed">
+				<MenuItem Command="{x:Static local:MainWindow.OptionWindow}"
+						  Header="オプション(O)..." />
+			</MenuItem>
+			<MenuItem Header="ヘルプ(H)">
+				<MenuItem Command="{x:Static local:MainWindow.VersionWindow}"
+						  Header="バージョン情報(V)..." />
+			</MenuItem>
+		</Menu>
+
+		<Grid DockPanel.Dock="Top">
+			<i:Interaction.Behaviors>
+				<lbhv:GridDefinitionSaveBehavior />
+			</i:Interaction.Behaviors>
+
+			<Grid.RowDefinitions>
+				<RowDefinition MinHeight="100" />
+				<RowDefinition Height="10" />
+				<RowDefinition Height="Auto"
+							   MinHeight="50" />
+			</Grid.RowDefinitions>
+
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition MinWidth="100" />
+				<ColumnDefinition Width="10" />
+				<ColumnDefinition Width="Auto"
+								  MinWidth="210" />
+			</Grid.ColumnDefinitions>
+
+			<local:DataGrid Margin="-1,0,0,0"
+							Background="{DynamicResource {x:Static SystemColors.ControlDarkBrushKey}}"
+							HorizontalGridLinesBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}"
+							ItemsSource="{Binding YMMPacker.Value.Items}"
+							RowHeight="25"
+							ScrollViewer.VerticalScrollBarVisibility="Visible"
+							SelectedCellsChanged="DataGrid_SelectedCellsChanged"
+							SelectionUnit="CellOrRowHeader"
+							Sorting="DataGrid_Sorting"
+							Template="{DynamicResource DataGridControlTemplate}"
+							VerticalGridLinesBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+				<DataGrid.Resources>
+					<SolidColorBrush x:Key="{x:Static SystemColors.HighlightBrushKey}"
+									 Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+					<SolidColorBrush x:Key="{x:Static SystemColors.InactiveSelectionHighlightBrushKey}"
+									 Color="{DynamicResource {x:Static SystemColors.HighlightColorKey}}" />
+
+					<!--  無駄な右側のカラム背景を消す  -->
+					<Style TargetType="{x:Type DataGridColumnHeadersPresenter}">
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="{x:Type DataGridColumnHeadersPresenter}">
+									<Grid>
+										<ItemsPresenter x:Name="itemsPresenter" />
+									</Grid>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+
+					<Style TargetType="{x:Type DataGridCell}">
+						<Setter Property="BorderBrush" Value="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}" />
+						<Setter Property="BorderThickness" Value="0,0,1,1" />
+
+						<Style.Triggers>
+							<MultiDataTrigger>
+								<MultiDataTrigger.Conditions>
+									<Condition Binding="{Binding IsSelected,
+																 RelativeSource={RelativeSource Self}}"
+											   Value="True" />
+									<Condition Binding="{Binding Focused,
+																 RelativeSource={RelativeSource AncestorType={x:Type DataGrid},
+																								Mode=FindAncestor}}"
+											   Value="True" />
+								</MultiDataTrigger.Conditions>
+
+								<Setter Property="Foreground" Value="White" />
+							</MultiDataTrigger>
+
+							<Trigger Property="IsSelected" Value="True">
+								<Setter Property="Foreground" Value="White" />
+							</Trigger>
+
+							<Trigger Property="IsSelected" Value="False">
+								<Setter Property="Background" Value="white" />
+							</Trigger>
+						</Style.Triggers>
+					</Style>
+				</DataGrid.Resources>
+
+				<i:Interaction.Behaviors>
+					<lbhv:DataGridColumnsWidthSaveBehavior />
+				</i:Interaction.Behaviors>
+
+				<DataGrid.Columns>
+					<DataGridTemplateColumn Header="タイプ"
+											SortMemberPath="Type">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<StackPanel Orientation="Horizontal">
+									<Control IsHitTestVisible="False">
+										<Control.Resources>
+											<Style TargetType="Control">
+												<Style.Triggers>
+													<DataTrigger Binding="{Binding Type}"
+																 Value="{x:Static local:ItemType.Image}">
+														<Setter Property="Template">
+															<Setter.Value>
+																<ControlTemplate>
+																	<Viewbox Margin="3">
+																		<local:ImageIcon />
+																	</Viewbox>
+																</ControlTemplate>
+															</Setter.Value>
+														</Setter>
+													</DataTrigger>
+													<DataTrigger Binding="{Binding Type}"
+																 Value="{x:Static local:ItemType.Audio}">
+														<Setter Property="Template">
+															<Setter.Value>
+																<ControlTemplate>
+																	<Viewbox>
+																		<local:AudioIcon />
+																	</Viewbox>
+																</ControlTemplate>
+															</Setter.Value>
+														</Setter>
+													</DataTrigger>
+													<DataTrigger Binding="{Binding Type}"
+																 Value="{x:Static local:ItemType.Video}">
+														<Setter Property="Template">
+															<Setter.Value>
+																<ControlTemplate>
+																	<Viewbox>
+																		<local:VideoIcon />
+																	</Viewbox>
+																</ControlTemplate>
+															</Setter.Value>
+														</Setter>
+													</DataTrigger>
+												</Style.Triggers>
+											</Style>
+										</Control.Resources>
+									</Control>
+
+									<TextBlock Margin="2,0,2,0"
+											   VerticalAlignment="Center"
+											   Text="{Binding Type}" />
+								</StackPanel>
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn Header="ファイル名"
+											SortMemberPath="Name">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock Margin="3,0,3,0"
+										   VerticalAlignment="Center"
+										   Text="{Binding Name}" />
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn Header="ファイルパス"
+											SortMemberPath="FilePath">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock Margin="3,0,3,0"
+										   VerticalAlignment="Center"
+										   Text="{Binding FilePath}" />
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+
+					<DataGridTemplateColumn Header="パッケージ後のフォルダ"
+											SortMemberPath="SubFolder">
+						<DataGridTemplateColumn.CellTemplate>
+							<DataTemplate>
+								<TextBlock Margin="3,0,3,0"
+										   VerticalAlignment="Center"
+										   Text="{Binding SubFolder}" />
+							</DataTemplate>
+						</DataGridTemplateColumn.CellTemplate>
+					</DataGridTemplateColumn>
+				</DataGrid.Columns>
+			</local:DataGrid>
+
+			<GridSplitter Grid.RowSpan="3"
+						  Grid.Column="1"
+						  HorizontalAlignment="Stretch"
+						  Background="Transparent" />
+
+			<StackPanel Grid.Column="2"
+						MinWidth="200"
+						Margin="0,5,10,0">
+				<TextBlock Text="パッケージ後のフォルダ" />
+				<TextBox Height="20"
+						 Padding="2,0,0,0"
+						 d:Text="aaaa"
+						 Text="{Binding SelectedDir.Value,
+										UpdateSourceTrigger=PropertyChanged}" />
+				<Button Width="100"
+						Height="30"
+						Margin="0,30,0,0"
+						HorizontalAlignment="Right"
+						Command="{Binding TypeApplyCommand}"
+						Content="タイプ別で適用" />
+			</StackPanel>
+
+			<GridSplitter Grid.Row="1"
+						  Grid.Column="0"
+						  HorizontalAlignment="Stretch"
+						  Background="Transparent" />
+
+			<Grid Grid.Row="2">
+				<Grid.RowDefinitions>
+					<RowDefinition Height="Auto" />
+					<RowDefinition />
+				</Grid.RowDefinitions>
+
+				<StackPanel Margin="2,0,0,0"
+							Orientation="Horizontal">
+					<TextBlock Text="使用フォント (" />
+					<TextBlock Text="{Binding FontsCount.Value}" />
+					<TextBlock Text=")" />
+				</StackPanel>
+
+				<TextBox Grid.Row="1"
+						 Margin="-1,0,0,-1"
+						 d:Height="80"
+						 HorizontalScrollBarVisibility="Auto"
+						 IsReadOnly="True"
+						 Text="{Binding Fonts.Value}"
+						 VerticalScrollBarVisibility="Visible" />
+			</Grid>
+
+			<StackPanel Grid.Row="2"
+						Grid.Column="2"
+						Margin="0,0,10,10"
+						HorizontalAlignment="Right"
+						VerticalAlignment="Bottom"
+						Orientation="Vertical">
+				<CheckBox Margin="0,0,0,5"
+						  HorizontalAlignment="Right"
+						  Content="パスをShift-JISに置換"
+						  IsChecked="{Binding IsShiftJIS.Value}" />
+				<Button Width="150"
+						Height="40"
+						Command="{Binding PackageCommand}"
+						Content="パーケージ作成..." />
+			</StackPanel>
+		</Grid>
+	</DockPanel>
+</window:Window>

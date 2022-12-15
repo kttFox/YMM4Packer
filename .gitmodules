@@ -1,0 +1,3 @@
+[submodule "LivetEx"]
+	path = LivetEx
+	url = https://github.com/kitunechan/LivetEx.git
